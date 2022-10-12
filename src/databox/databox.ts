@@ -2,6 +2,7 @@ import {idlFactory} from "./did/databox"
 import {Actor, ActorMethod, ActorSubclass, HttpAgent} from "@dfinity/agent";
 import {FilePut, Result_1, Result_10, Result_11, Result_2, Result_5, Result_9} from "./did/databox_type";
 import {nanoid} from "nanoid";
+import {Principal} from "_@dfinity_principal@0.11.3@@dfinity/principal";
 
 const chunkSize = 1992288
 
@@ -31,7 +32,6 @@ export class DataBox {
 
   public async put_plain_files(files: File[]): Promise<Result_2[]> {
     try {
-      const keyArr: Array<Result_2> = []
       const Actor = this.DataBoxActor
       const allPromise: Array<Promise<any>> = files.map(file => {
         return new Promise((resolve, reject) => {
@@ -160,6 +160,14 @@ export class DataBox {
   public async get_all_files_info(): Promise<Result_9> {
     try {
       return await this.DataBoxActor.getAssetexts() as Result_9
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async get_owner(): Promise<Principal> {
+    try {
+      return await this.DataBoxActor.getOwner() as Principal
     } catch (e) {
       throw e
     }
