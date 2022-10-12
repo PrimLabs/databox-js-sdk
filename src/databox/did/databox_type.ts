@@ -18,7 +18,7 @@ export interface Avatar {
 }
 
 export interface Chunk {
-  'data': Array<number>
+  'data': Array<number>|Uint8Array
 }
 
 export interface DataBox {
