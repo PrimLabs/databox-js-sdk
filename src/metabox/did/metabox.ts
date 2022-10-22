@@ -1,4 +1,6 @@
 export const idlFactory = ({IDL}) => {
+  const Branch = IDL.Rec();
+  const List = IDL.Rec();
   const BoxType = IDL.Variant({
     'xid': IDL.Null,
     'data_box': IDL.Null,
@@ -18,6 +20,7 @@ export const idlFactory = ({IDL}) => {
     'Named': IDL.Null,
     'NoBox': IDL.Null,
     'OnlyDataBoxCanDeleted': IDL.Null,
+    'DataBoxNotExisted': IDL.Null,
     'NameRepeat': IDL.Null,
     'UnAuthorized': IDL.Null,
     'SomethingErr': IDL.Null,
@@ -25,13 +28,13 @@ export const idlFactory = ({IDL}) => {
     'Invalid_Operation': IDL.Null,
     'NotifyCreateError': IDL.Nat,
   });
-  const Result_3 = IDL.Variant({'ok': IDL.Principal, 'err': Error});
+  const Result_4 = IDL.Variant({'ok': IDL.Principal, 'err': Error});
   const DelBoxArgs = IDL.Record({
     'cycleTo': IDL.Opt(IDL.Principal),
     'box_type': BoxType,
     'canisterId': IDL.Principal,
   });
-  const Result_2 = IDL.Variant({'ok': IDL.Text, 'err': Error});
+  const Result_3 = IDL.Variant({'ok': IDL.Text, 'err': Error});
   const BoxStatus = IDL.Variant({'stopped': IDL.Null, 'running': IDL.Null});
   const BoxInfo__1 = IDL.Record({
     'status': BoxStatus,
@@ -40,16 +43,44 @@ export const idlFactory = ({IDL}) => {
     'box_name': IDL.Text,
     'box_type': BoxType,
   });
-  const Result = IDL.Variant({'ok': IDL.Null, 'err': Error});
+  const Hash = IDL.Nat32;
+  const Key = IDL.Record({'key': BoxInfo__1, 'hash': Hash});
+  List.fill(IDL.Opt(IDL.Tuple(IDL.Tuple(Key, IDL.Null), List)));
+  const AssocList = IDL.Opt(IDL.Tuple(IDL.Tuple(Key, IDL.Null), List));
+  const Leaf = IDL.Record({'size': IDL.Nat, 'keyvals': AssocList});
+  const Trie = IDL.Variant({
+    'branch': Branch,
+    'leaf': Leaf,
+    'empty': IDL.Null,
+  });
+  Branch.fill(IDL.Record({'left': Trie, 'size': IDL.Nat, 'right': Trie}));
+  const Set = IDL.Variant({
+    'branch': Branch,
+    'leaf': Leaf,
+    'empty': IDL.Null,
+  });
+  const Result_1 = IDL.Variant({'ok': IDL.Null, 'err': Error});
   const TopUpArgs = IDL.Record({
     'box_id': IDL.Principal,
     'icp_amount': IDL.Nat64,
   });
+  const AccountIdentifier = IDL.Vec(IDL.Nat8);
+  const BlockIndex__1 = IDL.Nat64;
+  const Token = IDL.Record({'e8s': IDL.Nat64});
+  const BlockIndex = IDL.Nat64;
+  const TransferError = IDL.Variant({
+    'TxTooOld': IDL.Record({'allowed_window_nanos': IDL.Nat64}),
+    'BadFee': IDL.Record({'expected_fee': Token}),
+    'TxDuplicate': IDL.Record({'duplicate_of': BlockIndex}),
+    'TxCreatedInFuture': IDL.Null,
+    'InsufficientFunds': IDL.Record({'balance': Token}),
+  });
+  const Result = IDL.Variant({'ok': BlockIndex__1, 'err': TransferError});
   const UpdateWasmArgs = IDL.Record({
     'wasm': IDL.Vec(IDL.Nat8),
     'box_type': BoxType,
   });
-  const Result_1 = IDL.Variant({'ok': IDL.Text, 'err': IDL.Text});
+  const Result_2 = IDL.Variant({'ok': IDL.Text, 'err': IDL.Text});
   const BoxInfo = IDL.Record({
     'status': BoxStatus,
     'canister_id': IDL.Principal,
@@ -62,11 +93,13 @@ export const idlFactory = ({IDL}) => {
     'install_args': IDL.Vec(IDL.Nat8),
   });
   const MetaBox = IDL.Service({
+    'addAdmin': IDL.Func([IDL.Principal], [IDL.Bool], []),
     'changeAdmin': IDL.Func([IDL.Vec(IDL.Principal)], [IDL.Bool], []),
     'clearLog': IDL.Func([], [], []),
-    'createBox': IDL.Func([CreateBoxArgs], [Result_3], []),
+    'createDataBox': IDL.Func([CreateBoxArgs], [Result_4], []),
+    'createProfile': IDL.Func([], [IDL.Principal], []),
     'createXid': IDL.Func([], [IDL.Principal], []),
-    'deleteBox': IDL.Func([DelBoxArgs], [Result_2], []),
+    'deleteBox': IDL.Func([DelBoxArgs], [Result_3], []),
     'getAdmins': IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
     'getBoxes': IDL.Func([IDL.Principal], [IDL.Vec(BoxInfo__1)], ['query']),
     'getLog': IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))], ['query']),
@@ -85,17 +118,42 @@ export const idlFactory = ({IDL}) => {
       [IDL.Opt(IDL.Principal)],
       ['query'],
     ),
+    'getShareBoxes': IDL.Func([], [IDL.Vec(BoxInfo__1)], ['query']),
+    'getSharedBoxes': IDL.Func([], [IDL.Vec(BoxInfo__1)], ['query']),
+    'getUserPreBox': IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, Set))],
+      ['query'],
+    ),
+    'getUserWithDraw': IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+      ['query'],
+    ),
     'getXid': IDL.Func([], [IDL.Opt(IDL.Principal)], ['query']),
-    'installCycleWasm': IDL.Func([IDL.Vec(IDL.Nat8)], [Result], []),
-    'mintBox': IDL.Func([IDL.Principal, IDL.Vec(IDL.Nat8)], [IDL.Text], []),
-    'setName': IDL.Func([IDL.Text], [Result], []),
+    'installCycleWasm': IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
+    'removeShareBox': IDL.Func(
+      [IDL.Principal, IDL.Principal, IDL.Principal],
+      [Result_1],
+      [],
+    ),
+    'setName': IDL.Func([IDL.Text], [Result_1], []),
+    'shareBox': IDL.Func(
+      [IDL.Principal, IDL.Principal, IDL.Principal],
+      [Result_1],
+      [],
+    ),
     'startBox': IDL.Func([BoxInfo__1], [], []),
     'stopBox': IDL.Func([BoxInfo__1], [], []),
-    'topUpBox': IDL.Func([TopUpArgs], [Result], []),
-    'updateBoxInfo': IDL.Func([BoxInfo__1], [Result], []),
-    'update_wasm': IDL.Func([UpdateWasmArgs], [Result_1], []),
-    'upgradeBox': IDL.Func([UpgradeBoxArgs], [Result], []),
+    'topUpBox': IDL.Func([TopUpArgs], [Result_1], []),
+    'transferOutICP': IDL.Func([AccountIdentifier, IDL.Nat64], [Result], []),
+    'updateBoxInfo': IDL.Func([BoxInfo__1], [Result_1], []),
+    'updateWasm': IDL.Func([UpdateWasmArgs], [Result_2], []),
+    'updateWasmOnce': IDL.Func([IDL.Vec(IDL.Nat8)], [Result_2], []),
+    'upgradeBox': IDL.Func([UpgradeBoxArgs], [Result_1], []),
+    'upgradeBoxOnce': IDL.Func([UpgradeBoxArgs], [Result_1], []),
     'wallet_receive': IDL.Func([], [], []),
+    'withdrawOutIcp': IDL.Func([AccountIdentifier], [Result], []),
   });
   return MetaBox;
 };

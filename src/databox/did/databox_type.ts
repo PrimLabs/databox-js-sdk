@@ -3,9 +3,11 @@ import type {ActorMethod} from '@dfinity/agent';
 
 export interface AssetExt {
   'file_extension': string,
+  'share_other': Array<Principal>,
   'upload_status': boolean,
   'bucket_id': Principal,
   'aes_pub_key': [] | [string],
+  'is_private': boolean,
   'file_name': string,
   'file_key': string,
   'total_size': bigint,
@@ -18,31 +20,37 @@ export interface Avatar {
 }
 
 export interface Chunk {
-  'data': Array<number>|Uint8Array
+  'data': Array<number> | Uint8Array
 }
 
 export interface DataBox {
+  'addCon': ActorMethod<[Principal], Result_1>,
+  'addPrivatePlainShare': ActorMethod<[string, Principal], Result_1>,
   'avlSM': ActorMethod<[], Result_12>,
   'canisterState': ActorMethod<[], Result_11>,
   'clearall': ActorMethod<[], Result_1>,
+  'curControl': ActorMethod<[], [Principal, Array<Principal>]>,
   'cycleBalance': ActorMethod<[], Result_10>,
+  'deleteCon': ActorMethod<[Principal], Result_1>,
+  'deleteFileFromKey': ActorMethod<[string, FileLocation__1], Result_1>,
   'deleteShareFile': ActorMethod<[string, Principal], Result_1>,
   'deleteSharedFile': ActorMethod<[string], Result_1>,
-  'deletekey': ActorMethod<[string], Result_1>,
-  'getAssetextkey': ActorMethod<[string], Result_2>,
+  'getAssetextkey': ActorMethod<[string], Result_3>,
   'getAssetexts': ActorMethod<[], Result_9>,
   'getCipher': ActorMethod<[GET], Result_8>,
   'getDefaultDeviceShareDap': ActorMethod<[string], Result_1>,
-  'getFailBuffer': ActorMethod<[string], Result_7>,
-  'getFileShareOther': ActorMethod<[string], Result_6>,
+  'getFileShareOther': ActorMethod<[string], Result_7>,
+  'getOtherkey': ActorMethod<[string, FileLocation__1], Result_6>,
   'getOwner': ActorMethod<[], Principal>,
   'getPlain': ActorMethod<[GET], Result_5>,
   'getShareFiles': ActorMethod<[], Result_4>,
   'getSharedAesPublic': ActorMethod<[string], Result_1>,
-  'getThumbnail': ActorMethod<[string], Result_3>,
   'getVersion': ActorMethod<[], bigint>,
   'http_request': ActorMethod<[HttpRequest], HttpResponse>,
-  'put': ActorMethod<[FilePut], Result_2>,
+  'put': ActorMethod<[FilePut], Result_3>,
+  'records': ActorMethod<[OtherFile], Result_2>,
+  'removePrivatePlainShare': ActorMethod<[string, Principal], Result_1>,
+  'setPlainFilePubOrPri': ActorMethod<[string, boolean], Result_1>,
   'setShareFile': ActorMethod<[string, Principal, string], Result_1>,
   'streamingCallback': ActorMethod<[StreamingToken],
     StreamingCallbackHttpResponse>,
@@ -60,7 +68,7 @@ export type DataErr = { 'FileKeyErr': null } |
   { 'MemoryInsufficient': null } |
   { 'FileAesPubKeyNotExist': null } |
   { 'UserAccessErr': null } |
-  { 'DeviceNotExist': null } |
+  { 'FileRepeat': null } |
   { 'ShareRepeat': null };
 export type FileExt = { 'EncryptFileExt': AssetExt } |
   {
@@ -74,6 +82,14 @@ export type FileExt = { 'EncryptFileExt': AssetExt } |
     }
   } |
   { 'PlainFileExt': AssetExt };
+export type FileLocation = { 'ICEnCrypt': null } |
+  { 'IPFS': null } |
+  { 'Arweave': null } |
+  { 'ICPlain': null };
+export type FileLocation__1 = { 'ICEnCrypt': null } |
+  { 'IPFS': null } |
+  { 'Arweave': null } |
+  { 'ICPlain': null };
 export type FilePut = { 'EncryptFilePut': PUT } |
   {
     'SharedFilePut': {
@@ -109,27 +125,26 @@ export interface HttpResponse {
   'status_code': number,
 }
 
-export type PUT = {
-  'segment': {
-    'file_extension': string,
-    'order': bigint,
-    'chunk_number': bigint,
-    'chunk': Chunk,
-    'aes_pub_key': [] | [string],
-    'file_name': string,
-    'file_key': string,
-    'total_size': bigint,
-  }
-} |
-  {
-    'thumb_nail': {
-      'file_extension': string,
-      'aes_pub_key': [] | [string],
-      'file_name': string,
-      'file_key': string,
-      'image': Array<number>,
-    }
-  };
+export interface OtherFile {
+  'file_extension': string,
+  'file_location': FileLocation,
+  'file_name': string,
+  'file_key': string,
+  'file_url': string,
+}
+
+export interface PUT {
+  'file_extension': string,
+  'order': bigint,
+  'chunk_number': bigint,
+  'chunk': Chunk,
+  'aes_pub_key': [] | [string],
+  'is_private': boolean,
+  'file_name': string,
+  'file_key': string,
+  'total_size': bigint,
+}
+
 export type Result = { 'ok': null } |
   { 'err': DataErr };
 export type Result_1 = { 'ok': string } |
@@ -140,22 +155,28 @@ export type Result_11 = { 'ok': State } |
   { 'err': DataErr };
 export type Result_12 = { 'ok': bigint } |
   { 'err': DataErr };
-export type Result_2 = { 'ok': FileExt } |
+export type Result_2 = { 'ok': boolean } |
   { 'err': DataErr };
-export type Result_3 = { 'ok': ThumbNail } |
+export type Result_3 = { 'ok': FileExt } |
   { 'err': DataErr };
-export type Result_4 = { 'ok': Array<FileExt> } |
+export type Result_4 = { 'ok': [Array<FileExt>, Array<FileExt>] } |
   { 'err': DataErr };
 export type Result_5 = { 'ok': Array<number> } |
   { 'err': DataErr };
-export type Result_6 = { 'ok': Array<Principal> } |
+export type Result_6 = { 'ok': OtherFile } |
   { 'err': DataErr };
-export type Result_7 = { 'ok': Array<bigint> } |
+export type Result_7 = { 'ok': Array<Principal> } |
   { 'err': DataErr };
 export type Result_8 = { 'ok': Array<Array<number>> } |
   { 'err': DataErr };
 export type Result_9 = {
-  'ok': [Array<FileExt>, Array<FileExt>, Array<FileExt>]
+  'ok': [
+    Array<FileExt>,
+    Array<FileExt>,
+    Array<FileExt>,
+    Array<OtherFile>,
+    Array<OtherFile>,
+  ]
 } |
   { 'err': DataErr };
 
@@ -190,11 +211,6 @@ export interface StreamingToken {
 export interface StreamingToken__1 {
   'key': string,
   'index': bigint
-}
-
-export interface ThumbNail {
-  'file_extension': string,
-  'image': Array<number>,
 }
 
 export interface _SERVICE extends DataBox {
