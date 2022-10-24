@@ -1,10 +1,4 @@
-import {BoxMetadata} from "./metabox/did/metabox_type";
-import {Principal} from "_@dfinity_principal@0.11.3@@dfinity/principal";
-
-export type createBoxArg = {
-  BoxMetadata: BoxMetadata,
-  'icp_amount': number
-}
+import {Principal} from "@dfinity/principal";
 
 export type FileType = "EncryptFileExt" | "PlainFileExt"
 export type PutType = "EncryptFilePut" | "PlainFilePut"

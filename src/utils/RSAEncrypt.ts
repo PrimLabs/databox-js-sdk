@@ -120,7 +120,6 @@ class RSAEncrypt {
       key,
       ciphertext
     )
-
     let dec = new TextDecoder()
     return dec.decode(decrypted)
   }

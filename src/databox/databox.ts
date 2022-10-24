@@ -9,12 +9,12 @@ import {
   Result_4,
   Result_9
 } from "./did/databox_type";
+import random from "string-random"
 import {nanoid} from "nanoid";
 import {Principal} from "@dfinity/principal";
 import {changePlainFilePermissionArg, shareFileArg} from "../types";
 import {AESEncryptApi, EncryptApi, RSAEncryptApi} from "../utils";
 
-const random = require("string-random");
 
 const chunkSize = 1992288
 
@@ -70,7 +70,6 @@ export class DataBox {
           allPromise.push(Actor.put(arg))
         }
       }
-      console.log("allPromise", allPromise)
       await Promise.all(allPromise)
       return keyArr
     } catch (e) {
@@ -122,10 +121,8 @@ export class DataBox {
         const key = nanoid()
         keyArr.push(key)
         const total_size = file.size
-        const total_index = Math.ceil(total_size / chunkSize)
-        let length = 0
         const allData = await this.FileRead(file)
-        const data = new Uint8Array(length)
+        const data = new Uint8Array(total_size)
         for (let i = 0; i < allData.length; i++) {
           data.set(allData[i], i * chunkSize)
         }
@@ -147,19 +144,18 @@ export class DataBox {
             EncryptFilePut: {
               file_extension: file.type,
               order: BigInt(i),
-              chunk_number: BigInt(total_index),
+              chunk_number: BigInt(Math.ceil(NewBlob.size / chunkSize)),
               chunk: {data: encryptedData[i]},
               aes_pub_key: [encryptedAesKey],
               file_name: file.name,
               file_key: key,
-              total_size: BigInt(file.size),
+              total_size: BigInt(NewBlob.size),
               is_private: is_private
             }
           }
           allPromise.push(Actor.put(arg))
         }
       }
-      console.log("allPromise", allPromise)
       await Promise.all(allPromise)
       return keyArr
     } catch (e) {
@@ -167,8 +163,7 @@ export class DataBox {
     }
   }
 
-
-  async getFile(decodeArr: any, length: number): Promise<Uint8Array> {
+  private async getFile(decodeArr: any, length: number): Promise<Uint8Array> {
     const File = new Uint8Array(length)
     for (let i = 0; i < decodeArr.length; i++) {
       let slice = decodeArr[i]
@@ -229,7 +224,7 @@ export class DataBox {
       const dataArr: Array<Array<number>> = []
       let fileSize = 0
       const file_info = await this.get_file_info(file_key) as any
-      const fileType = file_info.ok.PlainFileExt.file_extension
+      const fileType = file_info?.ok?.EncryptFileExt.file_extension
       const res = await this.getData(file_info, true)
       if (res[0] && res[0].ok) {
         res.forEach(e => {
@@ -259,6 +254,14 @@ export class DataBox {
   public async delete_ic_plain_file(file_key: string): Promise<Result_1> {
     try {
       return await this.DataBoxActor.deleteFileFromKey(file_key, {'ICPlain': null}) as Result_1
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async delete_ic_encrypted_file(file_key: string): Promise<Result_1> {
+    try {
+      return await this.DataBoxActor.deleteFileFromKey(file_key, {'ICEnCrypt': null}) as Result_1
     } catch (e) {
       throw e
     }

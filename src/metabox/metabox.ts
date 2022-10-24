@@ -1,9 +1,8 @@
 import {idlFactory} from "./did/metabox"
 import {Actor, ActorMethod, ActorSubclass, HttpAgent} from "@dfinity/agent";
-import {createBoxArg} from "../types";
 import {Principal} from "@dfinity/principal";
 import {IDL} from "@dfinity/candid";
-import {Result_3} from "./did/metabox_type";
+import {BoxInfo__1, BoxMetadata, Result_5} from "./did/metabox_type";
 
 export class MetaBox {
   private readonly metaBoxCai = "zbzr7-xyaaa-aaaan-qadeq-cai"
@@ -30,15 +29,23 @@ export class MetaBox {
     return IDL.encode(createFunc.func.argTypes, [principal]);
   }
 
-  public async createBox(props: createBoxArg): Promise<Result_3> {
+  public async createDataBox(props: BoxMetadata): Promise<Result_5> {
     try {
+      await this.MetaBoxActor.xdrIcpRate()
       const principal = await this.agent.getPrincipal()
       const install_args = await this.getArg(principal);
-      return await this.MetaBoxActor.createBox({
-        metadata: props.BoxMetadata,
-        icp_amount: BigInt(props.icp_amount * 1e8),
+      return await this.MetaBoxActor.createDataBox({
+        metadata: props,
         install_args: Array.from(new Uint8Array(install_args)),
-      }) as Result_3;
+      }) as Result_5;
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async getBoxes(principal: Principal): Promise<BoxInfo__1[]> {
+    try {
+      return await this.MetaBoxActor.getBoxes(principal) as BoxInfo__1[]
     } catch (e) {
       throw e
     }

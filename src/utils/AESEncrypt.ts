@@ -1,4 +1,4 @@
-const CryptoJS = require("crypto-js");
+import CryptoJS from "crypto-js"
 
 class AESEncrypt {
   ArrayBufferToWordArray(arrayBuffer) {
@@ -50,6 +50,7 @@ class AESEncrypt {
     // const bKey = CryptoJS.enc.Utf8.parse(key);
     const bIv = CryptoJS.enc.Hex.parse(iv);
     // const bIv = CryptoJS.enc.Utf8.parse(iv);
+    //@ts-ignore
     const decrypt = CryptoJS.AES.decrypt({ciphertext: data}, bKey, {
       iv: bIv,
       mode: CryptoJS.mode.CBC,
