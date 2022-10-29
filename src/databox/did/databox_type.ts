@@ -6,6 +6,7 @@ export interface AssetExt {
   'share_other': Array<Principal>,
   'upload_status': boolean,
   'bucket_id': Principal,
+  'owner': Principal,
   'aes_pub_key': [] | [string],
   'is_private': boolean,
   'file_name': string,
@@ -54,6 +55,7 @@ export interface DataBox {
   'setShareFile': ActorMethod<[string, Principal, string], Result_1>,
   'streamingCallback': ActorMethod<[StreamingToken],
     StreamingCallbackHttpResponse>,
+  'transferOwner': ActorMethod<[Principal], Result_1>,
   'upload': ActorMethod<[Avatar], Result>,
   'wallet_receive': ActorMethod<[], bigint>,
 }
@@ -79,6 +81,7 @@ export type FileExt = { 'EncryptFileExt': AssetExt } |
       'file_name': string,
       'file_key': string,
       'isPublic': boolean,
+      'receiver': Principal,
     }
   } |
   { 'PlainFileExt': AssetExt };

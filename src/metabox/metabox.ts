@@ -2,7 +2,7 @@ import {idlFactory} from "./did/metabox"
 import {Actor, ActorMethod, ActorSubclass, HttpAgent} from "@dfinity/agent";
 import {Principal} from "@dfinity/principal";
 import {IDL} from "@dfinity/candid";
-import {BoxInfo__1, BoxMetadata, Result_5} from "./did/metabox_type";
+import {BoxInfo__1, BoxMetadata, DelBoxArgs, Result_2, Result_5, TopUpArgs} from "./did/metabox_type";
 
 export class MetaBox {
   private readonly metaBoxCai = "zbzr7-xyaaa-aaaan-qadeq-cai"
@@ -50,4 +50,29 @@ export class MetaBox {
       throw e
     }
   }
+
+  public async deleteBox(delBoxArgs: DelBoxArgs): Promise<Result_5> {
+    try {
+      return await this.MetaBoxActor.deleteBox(delBoxArgs) as Result_5
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async startBox(boxInfo: BoxInfo__1) {
+    try {
+      await this.MetaBoxActor.startBox(boxInfo)
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async topUpBox(boxInfo: BoxInfo__1) {
+    try {
+      await this.MetaBoxActor.topUpBox(boxInfo)
+    } catch (e) {
+      throw e
+    }
+  }
+
 }

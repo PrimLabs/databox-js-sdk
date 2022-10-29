@@ -28,6 +28,14 @@ export interface BoxMetadata {
   'box_type': BoxType,
 }
 
+export interface BoxState {
+  'status': BoxStatus,
+  'owner': Principal,
+  'is_private': boolean,
+  'box_name': string,
+  'box_type': BoxType,
+}
+
 export type BoxStatus = { 'stopped': null } |
   { 'running': null };
 export type BoxType = { 'xid': null } |
@@ -82,12 +90,13 @@ export interface MetaBox {
   'addAdmin': ActorMethod<[Principal], boolean>,
   'changeAdmin': ActorMethod<[Array<Principal>], boolean>,
   'clearLog': ActorMethod<[], undefined>,
-  'createDataBox': ActorMethod<[CreateBoxArgs], Result_5>,
+  'createDataBox': ActorMethod<[CreateBoxArgs], Result_6>,
   'createProfile': ActorMethod<[], Principal>,
   'createXid': ActorMethod<[], Principal>,
-  'deleteBox': ActorMethod<[DelBoxArgs], Result_4>,
+  'deleteBox': ActorMethod<[DelBoxArgs], Result_5>,
   'emitShareBox': ActorMethod<[Principal, Principal], Result_2>,
   'getAdmins': ActorMethod<[], Array<Principal>>,
+  'getBoxState': ActorMethod<[Principal], Result_4>,
   'getBoxes': ActorMethod<[Principal], Array<BoxInfo__1>>,
   'getLog': ActorMethod<[], Array<[bigint, string]>>,
   'getNameFromPrincipal': ActorMethod<[Principal], [] | [string]>,
@@ -105,6 +114,7 @@ export interface MetaBox {
   'startBox': ActorMethod<[BoxInfo__1], undefined>,
   'stopBox': ActorMethod<[BoxInfo__1], undefined>,
   'topUpBox': ActorMethod<[TopUpArgs], Result_2>,
+  'transferDataboxOwner': ActorMethod<[Principal, Principal], Result_2>,
   'transferOutICP': ActorMethod<[AccountIdentifier, bigint], Result_1>,
   'updateBoxInfo': ActorMethod<[BoxInfo__1], Result_2>,
   'updateWasm': ActorMethod<[UpdateWasmArgs], Result_3>,
@@ -124,9 +134,11 @@ export type Result_2 = { 'ok': null } |
   { 'err': Error };
 export type Result_3 = { 'ok': string } |
   { 'err': string };
-export type Result_4 = { 'ok': string } |
+export type Result_4 = { 'ok': BoxState } |
   { 'err': Error };
-export type Result_5 = { 'ok': Principal } |
+export type Result_5 = { 'ok': string } |
+  { 'err': Error };
+export type Result_6 = { 'ok': Principal } |
   { 'err': Error };
 export type Set = { 'branch': Branch } |
   { 'leaf': Leaf } |

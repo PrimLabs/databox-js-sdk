@@ -33,6 +33,7 @@ export const idlFactory = ({IDL}) => {
     'share_other': IDL.Vec(IDL.Principal),
     'upload_status': IDL.Bool,
     'bucket_id': IDL.Principal,
+    'owner': IDL.Principal,
     'aes_pub_key': IDL.Opt(IDL.Text),
     'is_private': IDL.Bool,
     'file_name': IDL.Text,
@@ -49,6 +50,7 @@ export const idlFactory = ({IDL}) => {
       'file_name': IDL.Text,
       'file_key': IDL.Text,
       'isPublic': IDL.Bool,
+      'receiver': IDL.Principal,
     }),
     'PlainFileExt': AssetExt,
   });
@@ -209,6 +211,7 @@ export const idlFactory = ({IDL}) => {
       [StreamingCallbackHttpResponse],
       ['query'],
     ),
+    'transferOwner': IDL.Func([IDL.Principal], [Result_1], []),
     'upload': IDL.Func([Avatar], [Result], []),
     'wallet_receive': IDL.Func([], [IDL.Nat], []),
   });

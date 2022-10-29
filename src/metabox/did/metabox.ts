@@ -30,14 +30,22 @@ export const idlFactory = ({IDL}) => {
     'metadata': BoxMetadata,
     'install_args': IDL.Vec(IDL.Nat8),
   });
-  const Result_5 = IDL.Variant({'ok': IDL.Principal, 'err': Error});
+  const Result_6 = IDL.Variant({'ok': IDL.Principal, 'err': Error});
   const DelBoxArgs = IDL.Record({
     'cycleTo': IDL.Opt(IDL.Principal),
     'box_type': BoxType,
     'canisterId': IDL.Principal,
   });
-  const Result_4 = IDL.Variant({'ok': IDL.Text, 'err': Error});
+  const Result_5 = IDL.Variant({'ok': IDL.Text, 'err': Error});
   const BoxStatus = IDL.Variant({'stopped': IDL.Null, 'running': IDL.Null});
+  const BoxState = IDL.Record({
+    'status': BoxStatus,
+    'owner': IDL.Principal,
+    'is_private': IDL.Bool,
+    'box_name': IDL.Text,
+    'box_type': BoxType,
+  });
+  const Result_4 = IDL.Variant({'ok': BoxState, 'err': Error});
   const BoxInfo__1 = IDL.Record({
     'status': BoxStatus,
     'canister_id': IDL.Principal,
@@ -103,12 +111,13 @@ export const idlFactory = ({IDL}) => {
     'addAdmin': IDL.Func([IDL.Principal], [IDL.Bool], []),
     'changeAdmin': IDL.Func([IDL.Vec(IDL.Principal)], [IDL.Bool], []),
     'clearLog': IDL.Func([], [], []),
-    'createDataBox': IDL.Func([CreateBoxArgs], [Result_5], []),
+    'createDataBox': IDL.Func([CreateBoxArgs], [Result_6], []),
     'createProfile': IDL.Func([], [IDL.Principal], []),
     'createXid': IDL.Func([], [IDL.Principal], []),
-    'deleteBox': IDL.Func([DelBoxArgs], [Result_4], []),
+    'deleteBox': IDL.Func([DelBoxArgs], [Result_5], []),
     'emitShareBox': IDL.Func([IDL.Principal, IDL.Principal], [Result_2], []),
     'getAdmins': IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
+    'getBoxState': IDL.Func([IDL.Principal], [Result_4], ['query']),
     'getBoxes': IDL.Func([IDL.Principal], [IDL.Vec(BoxInfo__1)], ['query']),
     'getLog': IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Text))], ['query']),
     'getNameFromPrincipal': IDL.Func(
@@ -150,6 +159,11 @@ export const idlFactory = ({IDL}) => {
     'startBox': IDL.Func([BoxInfo__1], [], []),
     'stopBox': IDL.Func([BoxInfo__1], [], []),
     'topUpBox': IDL.Func([TopUpArgs], [Result_2], []),
+    'transferDataboxOwner': IDL.Func(
+      [IDL.Principal, IDL.Principal],
+      [Result_2],
+      [],
+    ),
     'transferOutICP': IDL.Func([AccountIdentifier, IDL.Nat64], [Result_1], []),
     'updateBoxInfo': IDL.Func([BoxInfo__1], [Result_2], []),
     'updateWasm': IDL.Func([UpdateWasmArgs], [Result_3], []),
