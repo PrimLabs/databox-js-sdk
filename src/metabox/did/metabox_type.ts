@@ -49,8 +49,7 @@ export interface Branch {
 }
 
 export interface CreateBoxArgs {
-  'metadata': BoxMetadata,
-  'install_args': Array<number>,
+  'metadata': BoxMetadata
 }
 
 export interface DelBoxArgs {
@@ -65,6 +64,7 @@ export type Error = { 'Named': null } |
   { 'OnlyDataBoxCanDeleted': null } |
   { 'NameRepeat': null } |
   { 'UnAuthorized': null } |
+  { 'DataBoxEnough': null } |
   { 'DataBoxNotShareTo': null } |
   { 'SomethingErr': null } |
   { 'LedgerTransferError': bigint } |
@@ -86,20 +86,22 @@ export interface Leaf {
 export type List = [] | [[[Key, null], List]];
 
 export interface MetaBox {
-  'acceptSharedBox': ActorMethod<[Principal, Principal], Result_2>,
+  'acceptSharedBox': ActorMethod<[Principal, Principal], Result_1>,
   'addAdmin': ActorMethod<[Principal], boolean>,
   'changeAdmin': ActorMethod<[Array<Principal>], boolean>,
   'clearLog': ActorMethod<[], undefined>,
   'createDataBox': ActorMethod<[CreateBoxArgs], Result_6>,
+  'createDataBoxOne': ActorMethod<[CreateBoxArgs], Result_6>,
   'createProfile': ActorMethod<[], Principal>,
   'createXid': ActorMethod<[], Principal>,
   'deleteBox': ActorMethod<[DelBoxArgs], Result_5>,
-  'emitShareBox': ActorMethod<[Principal, Principal], Result_2>,
+  'emitShareBox': ActorMethod<[Principal, Principal], Result_1>,
   'getAdmins': ActorMethod<[], Array<Principal>>,
   'getBoxState': ActorMethod<[Principal], Result_4>,
   'getBoxes': ActorMethod<[Principal], Array<BoxInfo__1>>,
   'getLog': ActorMethod<[], Array<[bigint, string]>>,
   'getNameFromPrincipal': ActorMethod<[Principal], [] | [string]>,
+  'getPre': ActorMethod<[], bigint>,
   'getPrincipalFromName': ActorMethod<[string], [] | [Principal]>,
   'getProfile': ActorMethod<[Principal], [] | [Principal]>,
   'getShareBoxes': ActorMethod<[], Array<BoxInfo__1>>,
@@ -107,33 +109,34 @@ export interface MetaBox {
   'getUserPreBox': ActorMethod<[], Array<[Principal, Set]>>,
   'getUserWithDraw': ActorMethod<[], Array<[Principal, bigint]>>,
   'getXid': ActorMethod<[], [] | [Principal]>,
-  'installCycleWasm': ActorMethod<[Array<number>], Result_2>,
-  'removeShareBox': ActorMethod<[Principal, Principal], Result_2>,
-  'removeSharedBox': ActorMethod<[Principal, Principal], Result_2>,
-  'setName': ActorMethod<[string], Result_2>,
+  'initPreCreate': ActorMethod<[], Result_3>,
+  'installCycleWasm': ActorMethod<[Array<number>], Result_1>,
+  'preCreateDataBox': ActorMethod<[], Result_3>,
+  'removeShareBox': ActorMethod<[Principal, Principal], Result_1>,
+  'removeSharedBox': ActorMethod<[Principal, Principal], Result_1>,
+  'setName': ActorMethod<[string], Result_1>,
   'startBox': ActorMethod<[BoxInfo__1], undefined>,
   'stopBox': ActorMethod<[BoxInfo__1], undefined>,
-  'topUpBox': ActorMethod<[TopUpArgs], Result_2>,
-  'transferDataboxOwner': ActorMethod<[Principal, Principal], Result_2>,
-  'transferOutICP': ActorMethod<[AccountIdentifier, bigint], Result_1>,
-  'updateBoxInfo': ActorMethod<[BoxInfo__1], Result_2>,
-  'updateWasm': ActorMethod<[UpdateWasmArgs], Result_3>,
-  'updateWasmOnce': ActorMethod<[Array<number>], Result_3>,
-  'upgradeBox': ActorMethod<[UpgradeBoxArgs], Result_2>,
-  'upgradeBoxOnce': ActorMethod<[UpgradeBoxArgs], Result_2>,
+  'topUpBox': ActorMethod<[TopUpArgs], Result_1>,
+  'transferDataboxOwner': ActorMethod<[Principal, Principal], Result_1>,
+  'transferOutICP': ActorMethod<[AccountIdentifier, bigint], Result>,
+  'updateBoxInfo': ActorMethod<[BoxInfo__1], Result_1>,
+  'updateWasm': ActorMethod<[UpdateWasmArgs], Result_2>,
+  'updateWasmOnce': ActorMethod<[Array<number>], Result_2>,
+  'upgradeBox': ActorMethod<[UpgradeBoxArgs], Result_1>,
+  'upgradeBoxOnce': ActorMethod<[UpgradeBoxArgs], Result_1>,
   'wallet_receive': ActorMethod<[], undefined>,
-  'withdrawOutIcp': ActorMethod<[AccountIdentifier], Result_1>,
-  'xdrIcpRate': ActorMethod<[], Result>,
+  'withdrawOutIcp': ActorMethod<[AccountIdentifier], Result>,
 }
 
-export type Result = { 'ok': bigint } |
-  { 'err': Error };
-export type Result_1 = { 'ok': BlockIndex__1 } |
+export type Result = { 'ok': BlockIndex__1 } |
   { 'err': TransferError };
-export type Result_2 = { 'ok': null } |
+export type Result_1 = { 'ok': null } |
   { 'err': Error };
-export type Result_3 = { 'ok': string } |
+export type Result_2 = { 'ok': string } |
   { 'err': string };
+export type Result_3 = { 'ok': Array<Principal> } |
+  { 'err': Error };
 export type Result_4 = { 'ok': BoxState } |
   { 'err': Error };
 export type Result_5 = { 'ok': string } |
@@ -170,8 +173,7 @@ export interface UpdateWasmArgs {
 }
 
 export interface UpgradeBoxArgs {
-  'info': BoxInfo,
-  'install_args': Array<number>,
+  'info': BoxInfo
 }
 
 export interface _SERVICE extends MetaBox {

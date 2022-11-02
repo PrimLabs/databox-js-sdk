@@ -2,7 +2,16 @@ import {idlFactory} from "./did/metabox"
 import {Actor, ActorMethod, ActorSubclass, HttpAgent} from "@dfinity/agent";
 import {Principal} from "@dfinity/principal";
 import {IDL} from "@dfinity/candid";
-import {BoxInfo__1, BoxMetadata, DelBoxArgs, Result_2, Result_5, TopUpArgs} from "./did/metabox_type";
+import {
+  BoxInfo__1,
+  BoxMetadata,
+  CreateBoxArgs,
+  DelBoxArgs, Result_1,
+  Result_2,
+  Result_5,
+  Result_6,
+  TopUpArgs
+} from "./did/metabox_type";
 
 export class MetaBox {
   private readonly metaBoxCai = "zbzr7-xyaaa-aaaan-qadeq-cai"
@@ -14,30 +23,29 @@ export class MetaBox {
     this.MetaBoxActor = Actor.createActor(idlFactory, {agent, canisterId: this.metaBoxCai})
   }
 
-  private async getArg(principal: Principal): Promise<ArrayBuffer> {
-    let createFunc: any;
-    const service = idlFactory({IDL});
-    for (const [methodName, func] of service._fields) {
-      if (methodName === "getBoxes") {
-        createFunc = {
-          methodName: methodName,
-          func: func,
-        };
+  public async createDataBoxSingle(props: BoxMetadata): Promise<Result_6> {
+    try {
+      const arg: CreateBoxArgs = {
+        metadata: props
       }
+      return await this.MetaBoxActor.createDataBoxOne(arg) as Result_6;
+    } catch (e) {
+      throw e
     }
-    //通过 getBoxes函数的argTypes encode user's Principal
-    return IDL.encode(createFunc.func.argTypes, [principal]);
   }
 
-  public async createDataBox(props: BoxMetadata): Promise<Result_5> {
+  public async createDataBox(props: BoxMetadata): Promise<Result_6> {
     try {
-      await this.MetaBoxActor.xdrIcpRate()
-      const principal = await this.agent.getPrincipal()
-      const install_args = await this.getArg(principal);
-      return await this.MetaBoxActor.createDataBox({
-        metadata: props,
-        install_args: Array.from(new Uint8Array(install_args)),
-      }) as Result_5;
+      const arg: CreateBoxArgs = {
+        metadata: props
+      }
+      const res = await this.MetaBoxActor.createDataBox(arg) as Result_6;
+      if (Object.keys(res)[0] === "err") {
+        //@ts-ignore
+        if (Object.keys(res.err)[0] === "NoBox") {
+          return await this.createDataBoxSingle(props)        //@ts-ignore
+        } else throw new Error(`${Object.keys(res.err)[0]}`)
+      } else return res
     } catch (e) {
       throw e
     }

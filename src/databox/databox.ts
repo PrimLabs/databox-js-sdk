@@ -4,7 +4,7 @@ import {
   FilePut,
   Result_1,
   Result_10,
-  Result_11,
+  Result_11, Result_12, Result_13,
   Result_3,
   Result_4,
   Result_9
@@ -26,9 +26,9 @@ export class DataBox {
     this.DataBoxActor = Actor.createActor(idlFactory, {agent, canisterId})
   }
 
-  public async canisterState(): Promise<Result_11> {
+  public async canisterState(): Promise<Result_13> {
     try {
-      return await this.DataBoxActor.canisterState() as Result_11
+      return await this.DataBoxActor.canisterState() as Result_13
     } catch (e) {
       throw e
     }
@@ -283,9 +283,9 @@ export class DataBox {
     }
   }
 
-  public async get_all_files_info(): Promise<Result_9> {
+  public async get_all_files_info(): Promise<Result_12> {
     try {
-      return await this.DataBoxActor.getAssetexts() as Result_9
+      return await this.DataBoxActor.getAssetexts() as Result_12
     } catch (e) {
       throw e
     }
