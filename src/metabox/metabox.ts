@@ -10,7 +10,7 @@ import {
   Result_2,
   Result_5,
   Result_6,
-  TopUpArgs
+  TopUpArgs, UpgradeBoxArgs
 } from "./did/metabox_type";
 
 export class MetaBox {
@@ -67,6 +67,14 @@ export class MetaBox {
     }
   }
 
+  async transferDataboxOwner(canister_id: Principal, to: Principal): Promise<Result_1> {
+    try {
+      return await this.MetaBoxActor.transferDataboxOwner(canister_id, to) as Result_1
+    } catch (e) {
+      throw  e
+    }
+  }
+
   public async startBox(boxInfo: BoxInfo__1) {
     try {
       await this.MetaBoxActor.startBox(boxInfo)
@@ -75,9 +83,33 @@ export class MetaBox {
     }
   }
 
-  public async topUpBox(boxInfo: BoxInfo__1) {
+  public async topUpBox(TopUpArgs: TopUpArgs): Promise<Result_1> {
     try {
-      await this.MetaBoxActor.topUpBox(boxInfo)
+      return await this.MetaBoxActor.topUpBox(TopUpArgs) as Result_1
+    } catch (e) {
+      throw e
+    }
+  }
+
+  async upgradeBox(UpgradeBoxArgs: UpgradeBoxArgs): Promise<Result_1> {
+    try {
+      return await this.MetaBoxActor.upgradeBox(UpgradeBoxArgs) as Result_1
+    } catch (e) {
+      throw e
+    }
+  }
+
+  async upgradeBoxOnce(UpgradeBoxArgs: UpgradeBoxArgs): Promise<Result_1> {
+    try {
+      return await this.MetaBoxActor.upgradeBoxOnce(UpgradeBoxArgs) as Result_1
+    } catch (e) {
+      throw e
+    }
+  }
+
+  async updateBoxInfo(BoxInfo__1: BoxInfo__1): Promise<Result_1> {
+    try {
+      return await this.MetaBoxActor.updateBoxInfo(BoxInfo__1) as Result_1
     } catch (e) {
       throw e
     }

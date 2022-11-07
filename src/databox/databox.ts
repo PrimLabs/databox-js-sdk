@@ -77,7 +77,7 @@ export class DataBox {
     }
   }
 
-  private async FileRead(file: File | Blob): Promise<Uint8Array[]> {
+  public async FileRead(file: File | Blob): Promise<Uint8Array[]> {
     try {
       return new Promise((resolve, reject) => {
         let start = 0;
@@ -112,6 +112,25 @@ export class DataBox {
     }
   }
 
+  public async encryptFileData(data: Uint8Array, publicKey: string) {
+    try {
+      const AESKEY = await EncryptApi.aesKeyGen();
+      const AESIv = random(128);
+      const encData = AESEncryptApi.AESEncData(
+        data,
+        AESKEY,
+        AESIv
+      );
+      const encryptedAesKey = await RSAEncryptApi.encryptMessage(
+        publicKey,
+        `${AESKEY}${AESIv}`
+      );
+      return {encData, encryptedAesKey}
+    } catch (e) {
+      throw e
+    }
+  }
+
   public async put_encrypt_files(files: File[], is_private: boolean, publicKey: string): Promise<string[]> {
     try {
       const Actor = this.DataBoxActor
@@ -126,17 +145,7 @@ export class DataBox {
         for (let i = 0; i < allData.length; i++) {
           data.set(allData[i], i * chunkSize)
         }
-        const AESKEY = await EncryptApi.aesKeyGen();
-        const AESIv = random(128);
-        const encData = AESEncryptApi.AESEncData(
-          data,
-          AESKEY,
-          AESIv
-        );
-        const encryptedAesKey = await RSAEncryptApi.encryptMessage(
-          publicKey,
-          `${AESKEY}${AESIv}`
-        );
+        const {encData, encryptedAesKey} = await this.encryptFileData(data, publicKey)
         const NewBlob = new Blob([encData])
         const encryptedData = await this.FileRead(NewBlob)
         for (let i = 0; i < encryptedData.length; i++) {
@@ -286,6 +295,14 @@ export class DataBox {
   public async get_all_files_info(): Promise<Result_12> {
     try {
       return await this.DataBoxActor.getAssetexts() as Result_12
+    } catch (e) {
+      throw e
+    }
+  }
+
+  async transferOwner(to: Principal): Promise<Result_1> {
+    try {
+      return await this.DataBoxActor.transferOwner(to) as Result_1
     } catch (e) {
       throw e
     }
