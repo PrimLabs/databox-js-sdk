@@ -7,11 +7,10 @@ import {
   BoxMetadata,
   CreateBoxArgs,
   DelBoxArgs, Result, Result_3,
-  Result_5,
   Result_6,
   TopUpArgs, UpgradeBoxArgs
 } from "./did/metabox_type";
-import {API} from "../utils/auth"
+import {authApi} from "../auth";
 
 export class MetaBox {
   private readonly metaBoxCai = "zbzr7-xyaaa-aaaan-qadeq-cai"
@@ -30,7 +29,7 @@ export class MetaBox {
       const arg: CreateBoxArgs = {
         metadata: props
       }
-      const u8 = API.get_auth_token(principal.toUint8Array())
+      const u8 = authApi.get_auth_token(principal)
       const res = await this.MetaBoxActor.createDataBox(arg, u8) as Result_3;
       if (Object.keys(res)[0] === "err") {
         //@ts-ignore
