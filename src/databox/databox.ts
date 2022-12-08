@@ -4,9 +4,9 @@ import {
   FilePut,
   Result_1,
   Result_10,
-  Result_11, Result_12, Result_13,
+  Result_2,
   Result_3,
-  Result_4,
+  Result_7,
   Result_9
 } from "./did/databox_type";
 import random from "string-random"
@@ -14,29 +14,33 @@ import {nanoid} from "nanoid";
 import {Principal} from "@dfinity/principal";
 import {changePlainFilePermissionArg, shareFileArg} from "../types";
 import {AESEncryptApi, EncryptApi, RSAEncryptApi} from "../utils";
+import {MetaBox} from "../metabox";
+import {BoxInfo} from "../metabox/did/metabox_type";
 
 
 const chunkSize = 1992288
+const ONE_BYTE_UPLOAD_USE_CYCLES = 2260
 
 export class DataBox {
-  // private readonly agent: HttpAgent
+  private readonly agent: HttpAgent
   private readonly DataBoxActor: ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
 
   constructor(canisterId: string, agent: HttpAgent) {
+    this.agent = agent
     this.DataBoxActor = Actor.createActor(idlFactory, {agent, canisterId})
   }
 
-  public async canisterState(): Promise<Result_13> {
+  public async canisterState(): Promise<Result_10> {
     try {
-      return await this.DataBoxActor.canisterState() as Result_13
+      return await this.DataBoxActor.canisterState() as Result_10
     } catch (e) {
       throw e
     }
   }
 
-  public async cycleBalance(): Promise<Result_10> {
+  public async cycleBalance(): Promise<Result_7> {
     try {
-      return await this.DataBoxActor.cycleBalance() as Result_10
+      return await this.DataBoxActor.cycleBalance() as Result_7
     } catch (e) {
       throw e
     }
@@ -46,7 +50,7 @@ export class DataBox {
     try {
       const Actor = this.DataBoxActor
       const keyArr: Array<string> = []
-      const allPromise: Array<any> = []
+      const allPromise: Array<Promise<any>> = []
       for (const file of files) {
         const key = nanoid()
         keyArr.push(key)
@@ -56,15 +60,17 @@ export class DataBox {
         for (let i = 0; i < allData.length; i++) {
           const arg: FilePut = {
             PlainFilePut: {
-              file_extension: file.type,
-              order: BigInt(i),
-              chunk_number: BigInt(total_index),
-              chunk: {data: allData[i]},
-              aes_pub_key: [],
-              file_name: file.name,
-              file_key: key,
-              total_size: BigInt(file.size),
-              is_private: is_private
+              IC: {
+                file_extension: file.type,
+                order: BigInt(i),
+                chunk_number: BigInt(total_index),
+                chunk: {data: allData[i]},
+                aes_pub_key: [],
+                file_name: file.name,
+                file_key: key,
+                total_size: BigInt(file.size),
+                is_private: is_private
+              }
             }
           }
           allPromise.push(Actor.put(arg))
@@ -151,15 +157,17 @@ export class DataBox {
         for (let i = 0; i < encryptedData.length; i++) {
           const arg: FilePut = {
             EncryptFilePut: {
-              file_extension: file.type,
-              order: BigInt(i),
-              chunk_number: BigInt(Math.ceil(NewBlob.size / chunkSize)),
-              chunk: {data: encryptedData[i]},
-              aes_pub_key: [encryptedAesKey],
-              file_name: file.name,
-              file_key: key,
-              total_size: BigInt(NewBlob.size),
-              is_private: is_private
+              IC: {
+                file_extension: file.type,
+                order: BigInt(i),
+                chunk_number: BigInt(Math.ceil(NewBlob.size / chunkSize)),
+                chunk: {data: encryptedData[i]},
+                aes_pub_key: [encryptedAesKey],
+                file_name: file.name,
+                file_key: key,
+                total_size: BigInt(NewBlob.size),
+                is_private: is_private
+              }
             }
           }
           allPromise.push(Actor.put(arg))
@@ -255,6 +263,7 @@ export class DataBox {
           type: fileType,
         })
       } else throw new Error(Object.keys(res[0].err)[0])
+
     } catch (e) {
       throw e
     }
@@ -262,7 +271,7 @@ export class DataBox {
 
   public async delete_ic_plain_file(file_key: string): Promise<Result_1> {
     try {
-      return await this.DataBoxActor.deleteFileFromKey(file_key, {'ICPlain': null}) as Result_1
+      return await this.DataBoxActor.deleteFileFromKey(file_key, {'Plain': null}) as Result_1
     } catch (e) {
       throw e
     }
@@ -270,7 +279,7 @@ export class DataBox {
 
   public async delete_ic_encrypted_file(file_key: string): Promise<Result_1> {
     try {
-      return await this.DataBoxActor.deleteFileFromKey(file_key, {'ICEnCrypt': null}) as Result_1
+      return await this.DataBoxActor.deleteFileFromKey(file_key, {'EnCrypt': null}) as Result_1
     } catch (e) {
       throw e
     }
@@ -284,17 +293,25 @@ export class DataBox {
     }
   }
 
-  public async get_file_info(file_key: string): Promise<Result_3> {
+  public async get_file_info(file_key: string): Promise<Result_2> {
     try {
-      return await this.DataBoxActor.getAssetextkey(file_key) as Result_3
+      return await this.DataBoxActor.getAssetextkey(file_key) as Result_2
     } catch (e) {
       throw e
     }
   }
 
-  public async get_all_files_info(): Promise<Result_12> {
+  public async getVersion(): Promise<bigint> {
     try {
-      return await this.DataBoxActor.getAssetexts() as Result_12
+      return await this.DataBoxActor.getVersion() as bigint
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async get_all_files_info(): Promise<Result_9> {
+    try {
+      return await this.DataBoxActor.getAssetexts() as Result_9
     } catch (e) {
       throw e
     }
@@ -340,12 +357,59 @@ export class DataBox {
     }
   }
 
-  public async getShareFiles(): Promise<Result_4> {
+  public async getShareFiles(): Promise<Result_3> {
     try {
-      return await this.DataBoxActor.getShareFiles() as Result_4
+      return await this.DataBoxActor.getShareFiles() as Result_3
     } catch (e) {
       throw e
     }
+  }
+
+  public async is_need_upgrade(): Promise<boolean> {
+    try {
+      const MBapi = new MetaBox(this.agent)
+      const version = Number(await this.getVersion())
+      const new_version = Number(await MBapi.getDataBoxVersion())
+      return version < new_version
+    } catch (e) {
+      throw e
+    }
+  }
+
+  public async upgrade(BoxInfo: BoxInfo): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+      try {
+        const MBapi = new MetaBox(this.agent)
+        const version = Number(await this.getVersion())
+        if (version < 5) {
+          await MBapi.upgradeBoxOnce({info: BoxInfo})
+          await MBapi.upgradeBoxTwice({info: BoxInfo})
+        } else if (version < 7) {
+          await MBapi.upgradeBoxTwice({info: BoxInfo})
+        }
+        await MBapi.upgradeBox({info: BoxInfo})
+        return resolve(true)
+      } catch (e) {
+        return reject(e)
+      }
+    })
+  }
+
+  public async is_enough_to_upload(total_size: number): Promise<boolean> {
+    return new Promise<boolean>(async (resolve, reject) => {
+      try {
+        const res = await this.cycleBalance()
+        if (Object.keys(res)[0] === "ok") {//@ts-ignore
+          const balance = Number(res.ok)
+          if (total_size * ONE_BYTE_UPLOAD_USE_CYCLES < balance) {
+            return resolve(true)
+          } else return reject(Number(total_size * ONE_BYTE_UPLOAD_USE_CYCLES - balance))
+          //@ts-ignore
+        } else return reject(String(Object.keys(res.err)[0]))
+      } catch (e) {
+        return reject(e)
+      }
+    })
   }
 
 }

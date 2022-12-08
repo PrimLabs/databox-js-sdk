@@ -15,21 +15,26 @@ export const idlFactory = ({IDL}) => {
     'ShareRepeat': IDL.Null,
   });
   const Result_1 = IDL.Variant({'ok': IDL.Text, 'err': DataErr});
-  const Result_14 = IDL.Variant({'ok': IDL.Nat64, 'err': DataErr});
+  const Result_11 = IDL.Variant({'ok': IDL.Nat64, 'err': DataErr});
   const State = IDL.Record({
     'balance': IDL.Nat,
     'memory_size': IDL.Nat,
     'stable_memory_size': IDL.Nat64,
   });
-  const Result_13 = IDL.Variant({'ok': State, 'err': DataErr});
-  const Result_10 = IDL.Variant({'ok': IDL.Nat, 'err': DataErr});
+  const Result_10 = IDL.Variant({'ok': State, 'err': DataErr});
+  const Result_7 = IDL.Variant({'ok': IDL.Nat, 'err': DataErr});
   const FileLocation = IDL.Variant({
     'All': IDL.Null,
-    'ICEnCrypt': IDL.Null,
-    'IPFS': IDL.Null,
-    'ICShared': IDL.Null,
-    'Arweave': IDL.Null,
-    'ICPlain': IDL.Null,
+    'EnCrypt': IDL.Null,
+    'Shared': IDL.Null,
+    'Plain': IDL.Null,
+  });
+  const FieldLocation = IDL.Variant({
+    'ICEnCrypt': IDL.Vec(IDL.Vec(IDL.Tuple(IDL.Nat64, IDL.Nat64))),
+    'IPFS': IDL.Text,
+    'Arweave': IDL.Text,
+    'ICFlag': IDL.Null,
+    'ICPlain': IDL.Vec(IDL.Tuple(IDL.Nat64, IDL.Nat64)),
   });
   const Time = IDL.Int;
   const AssetExt = IDL.Record({
@@ -43,6 +48,7 @@ export const idlFactory = ({IDL}) => {
     'file_name': IDL.Text,
     'file_key': IDL.Text,
     'total_size': IDL.Nat64,
+    'page_field': FieldLocation,
     'create_time': Time,
     'need_query_times': IDL.Nat,
   });
@@ -54,44 +60,30 @@ export const idlFactory = ({IDL}) => {
       'description': IDL.Text,
       'file_name': IDL.Text,
       'file_key': IDL.Text,
+      'page_field': FieldLocation,
       'create_time': Time,
       'isPublic': IDL.Bool,
       'receiver': IDL.Principal,
     }),
     'PlainFileExt': AssetExt,
   });
-  const Result_3 = IDL.Variant({'ok': FileExt, 'err': DataErr});
-  const OtherFile = IDL.Record({
-    'file_extension': IDL.Text,
-    'file_name': IDL.Text,
-    'file_key': IDL.Text,
-    'file_url': IDL.Text,
-    'create_time': Time,
-  });
-  const Result_12 = IDL.Variant({
-    'ok': IDL.Tuple(
-      IDL.Vec(FileExt),
-      IDL.Vec(FileExt),
-      IDL.Vec(FileExt),
-      IDL.Vec(OtherFile),
-      IDL.Vec(OtherFile),
-    ),
+  const Result_2 = IDL.Variant({'ok': FileExt, 'err': DataErr});
+  const Result_9 = IDL.Variant({
+    'ok': IDL.Tuple(IDL.Vec(FileExt), IDL.Vec(FileExt), IDL.Vec(FileExt)),
     'err': DataErr,
   });
   const GET = IDL.Record({'flag': IDL.Nat, 'file_key': IDL.Text});
-  const Result_11 = IDL.Variant({
+  const Result_8 = IDL.Variant({
     'ok': IDL.Vec(IDL.Vec(IDL.Nat8)),
     'err': DataErr,
   });
-  const Result_9 = IDL.Variant({
+  const Result_6 = IDL.Variant({
     'ok': IDL.Vec(IDL.Principal),
     'err': DataErr,
   });
-  const Result_8 = IDL.Variant({'ok': IDL.Vec(FileExt), 'err': DataErr});
-  const Result_7 = IDL.Variant({'ok': IDL.Vec(OtherFile), 'err': DataErr});
-  const Result_6 = IDL.Variant({'ok': OtherFile, 'err': DataErr});
-  const Result_5 = IDL.Variant({'ok': IDL.Vec(IDL.Nat8), 'err': DataErr});
-  const Result_4 = IDL.Variant({
+  const Result_5 = IDL.Variant({'ok': IDL.Vec(FileExt), 'err': DataErr});
+  const Result_4 = IDL.Variant({'ok': IDL.Vec(IDL.Nat8), 'err': DataErr});
+  const Result_3 = IDL.Variant({
     'ok': IDL.Tuple(IDL.Vec(FileExt), IDL.Vec(FileExt)),
     'err': DataErr,
   });
@@ -124,16 +116,27 @@ export const idlFactory = ({IDL}) => {
     'status_code': IDL.Nat16,
   });
   const Chunk = IDL.Record({'data': IDL.Vec(IDL.Nat8)});
-  const PUT = IDL.Record({
-    'file_extension': IDL.Text,
-    'order': IDL.Nat,
-    'chunk_number': IDL.Nat,
-    'chunk': Chunk,
-    'aes_pub_key': IDL.Opt(IDL.Text),
-    'is_private': IDL.Bool,
-    'file_name': IDL.Text,
-    'file_key': IDL.Text,
-    'total_size': IDL.Nat64,
+  const PUT = IDL.Variant({
+    'IC': IDL.Record({
+      'file_extension': IDL.Text,
+      'order': IDL.Nat,
+      'chunk_number': IDL.Nat,
+      'chunk': Chunk,
+      'aes_pub_key': IDL.Opt(IDL.Text),
+      'is_private': IDL.Bool,
+      'file_name': IDL.Text,
+      'file_key': IDL.Text,
+      'total_size': IDL.Nat64,
+    }),
+    'Other': IDL.Record({
+      'file_extension': IDL.Text,
+      'aes_pub_key': IDL.Opt(IDL.Text),
+      'is_private': IDL.Bool,
+      'file_name': IDL.Text,
+      'file_key': IDL.Text,
+      'total_size': IDL.Nat64,
+      'page_field': FieldLocation,
+    }),
   });
   const FilePut = IDL.Variant({
     'EncryptFilePut': PUT,
@@ -144,11 +147,11 @@ export const idlFactory = ({IDL}) => {
       'description': IDL.Text,
       'file_name': IDL.Text,
       'file_key': IDL.Text,
+      'page_field': FieldLocation,
       'isPublic': IDL.Bool,
     }),
     'PlainFilePut': PUT,
   });
-  const Result_2 = IDL.Variant({'ok': IDL.Bool, 'err': DataErr});
   const StreamingToken = IDL.Record({'key': IDL.Text, 'index': IDL.Nat});
   const StreamingCallbackHttpResponse = IDL.Record({
     'token': IDL.Opt(StreamingToken__1),
@@ -166,44 +169,37 @@ export const idlFactory = ({IDL}) => {
       [Result_1],
       [],
     ),
-    'avlSM': IDL.Func([], [Result_14], ['query']),
-    'canisterState': IDL.Func([], [Result_13], ['query']),
+    'avlSM': IDL.Func([], [Result_11], ['query']),
+    'canisterState': IDL.Func([], [Result_10], ['query']),
     'clearall': IDL.Func([], [Result_1], []),
     'curControl': IDL.Func(
       [],
       [IDL.Principal, IDL.Vec(IDL.Principal)],
       ['query'],
     ),
-    'cycleBalance': IDL.Func([], [Result_10], ['query']),
+    'cycleBalance': IDL.Func([], [Result_7], ['query']),
     'deleteCon': IDL.Func([IDL.Principal], [Result_1], []),
     'deleteFileFromKey': IDL.Func([IDL.Text, FileLocation], [Result_1], []),
     'deleteShareFile': IDL.Func([IDL.Text, IDL.Principal], [Result_1], []),
     'deleteSharedFile': IDL.Func([IDL.Text], [Result_1], []),
-    'getAssetextkey': IDL.Func([IDL.Text], [Result_3], ['query']),
-    'getAssetexts': IDL.Func([], [Result_12], ['query']),
-    'getCipher': IDL.Func([GET], [Result_11], ['query']),
+    'getAssetextkey': IDL.Func([IDL.Text], [Result_2], ['query']),
+    'getAssetexts': IDL.Func([], [Result_9], ['query']),
+    'getCipher': IDL.Func([GET], [Result_8], ['query']),
     'getDefaultDeviceShareDap': IDL.Func([IDL.Text], [Result_1], ['query']),
-    'getFileNums': IDL.Func([FileLocation], [Result_10], ['query']),
-    'getFileShareOther': IDL.Func([IDL.Text], [Result_9], ['query']),
-    'getIcPageFiles': IDL.Func(
-      [FileLocation, IDL.Nat, IDL.Nat],
-      [Result_8],
-      ['query'],
-    ),
-    'getOtherPageFiles': IDL.Func(
-      [FileLocation, IDL.Nat, IDL.Nat],
-      [Result_7],
-      ['query'],
-    ),
-    'getOtherkey': IDL.Func([IDL.Text, FileLocation], [Result_6], ['query']),
+    'getFileNums': IDL.Func([FileLocation], [Result_7], ['query']),
+    'getFileShareOther': IDL.Func([IDL.Text], [Result_6], ['query']),
     'getOwner': IDL.Func([], [IDL.Principal], ['query']),
-    'getPlain': IDL.Func([GET], [Result_5], ['query']),
-    'getShareFiles': IDL.Func([], [Result_4], ['query']),
+    'getPageFiles': IDL.Func(
+      [FileLocation, IDL.Nat, IDL.Nat],
+      [Result_5],
+      ['query'],
+    ),
+    'getPlain': IDL.Func([GET], [Result_4], ['query']),
+    'getShareFiles': IDL.Func([], [Result_3], ['query']),
     'getSharedAesPublic': IDL.Func([IDL.Text], [Result_1], ['query']),
     'getVersion': IDL.Func([], [IDL.Nat], ['query']),
     'http_request': IDL.Func([HttpRequest], [HttpResponse], ['query']),
-    'put': IDL.Func([FilePut], [Result_3], []),
-    'records': IDL.Func([OtherFile, FileLocation], [Result_2], []),
+    'put': IDL.Func([FilePut], [Result_2], []),
     'removePrivatePlainShare': IDL.Func(
       [IDL.Text, IDL.Principal],
       [Result_1],
@@ -221,7 +217,7 @@ export const idlFactory = ({IDL}) => {
       ['query'],
     ),
     'transferOwner': IDL.Func([IDL.Principal], [Result_1], []),
-    'upload': IDL.Func([Avatar], [Result], []),
+    'uploadAvatar': IDL.Func([Avatar, IDL.Text], [Result], []),
     'wallet_receive': IDL.Func([], [IDL.Nat], []),
   });
   return DataBox;
