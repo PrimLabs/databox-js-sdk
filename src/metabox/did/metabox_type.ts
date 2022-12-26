@@ -59,6 +59,10 @@ export interface Branch {
   'right': Trie
 }
 
+export type BurnError = { 'InsufficientBalance': null } |
+  { 'InvalidTokenContract': null } |
+  { 'NotSufficientLiquidity': null };
+
 export interface CreateBoxArgs {
   'metadata': BoxMetadata
 }
@@ -69,15 +73,18 @@ export interface DelBoxArgs {
   'canisterId': Principal,
 }
 
-export type Error = { 'NoUnBoundOg': null } |
+export type Error = { 'NoFreeBoxNum': null } |
+  { 'NoUnBoundOg': null } |
   { 'Named': null } |
   { 'NoBox': null } |
   { 'DataBoxNotExist': null } |
   { 'OnlyDataBoxCanDeleted': null } |
+  { 'BalanceNotEnough': null } |
   { 'NameRepeat': null } |
   { 'UnAuthorized': null } |
   { 'DataBoxEnough': null } |
   { 'DataBoxNotShareTo': null } |
+  { 'CreateBoxOnWay': null } |
   { 'SomethingErr': null } |
   { 'LedgerTransferError': bigint } |
   { 'Invalid_Operation': null } |
@@ -103,22 +110,25 @@ export interface MetaBox {
   'acceptSharedBox': ActorMethod<[Principal, Principal], Result>,
   'addAdmin': ActorMethod<[Principal], boolean>,
   'boundOgDataboxOwner': ActorMethod<[Principal, Principal], Result>,
+  'burnxtc': ActorMethod<[bigint], RustResult>,
   'changeAdmin': ActorMethod<[Array<Principal>], boolean>,
   'changeBoxAvatarKey': ActorMethod<[string], undefined>,
   'clearLog': ActorMethod<[], undefined>,
-  'createDataBox': ActorMethod<[CreateBoxArgs, Uint8Array], Result_3>,
-  'createProfile': ActorMethod<[Uint8Array], Result_3>,
-  'createXid': ActorMethod<[Uint8Array], Principal>,
-  'deleteBox': ActorMethod<[DelBoxArgs], Result_6>,
+  'createDataBoxFee': ActorMethod<[CreateBoxArgs, boolean], Result_6>,
+  'createDataBoxFree': ActorMethod<[CreateBoxArgs], Result_6>,
+  'createProfile': ActorMethod<[Uint8Array], Result_6>,
+  'deleteBox': ActorMethod<[DelBoxArgs], Result_5>,
   'emitShareBox': ActorMethod<[Principal, Principal], Result>,
+  'getActivitySet': ActorMethod<[], Array<Principal>>,
   'getAdmins': ActorMethod<[], Array<Principal>>,
-  'getBoxState': ActorMethod<[Principal], Result_5>,
+  'getBoxState': ActorMethod<[Principal], Result_4>,
   'getBoxes': ActorMethod<[Principal], Array<BoxAllInfo>>,
   'getCycleBalance': ActorMethod<[], bigint>,
   'getDataBoxVersion': ActorMethod<[], bigint>,
   'getIcp': ActorMethod<[], bigint>,
   'getLog': ActorMethod<[], Array<[bigint, string]>>,
   'getNameFromPrincipal': ActorMethod<[Principal], [] | [string]>,
+  'getNamePrin': ActorMethod<[Principal], [] | [string]>,
   'getOGBoxes': ActorMethod<[], Array<BoxInfo__1>>,
   'getOGNum': ActorMethod<[], bigint>,
   'getOGPreBoxes': ActorMethod<[Principal], Array<BoxInfo__1>>,
@@ -130,35 +140,34 @@ export interface MetaBox {
   'getShareBoxes': ActorMethod<[], Array<BoxAllInfo>>,
   'getSharedBoxes': ActorMethod<[], Array<BoxAllInfo>>,
   'getTotal': ActorMethod<[], [bigint, bigint]>,
+  'getUserBalance': ActorMethod<[], [] | [bigint]>,
   'getUserOgBox': ActorMethod<[], Array<[Principal, Set]>>,
   'getUserPreBox': ActorMethod<[], Array<[Principal, Set]>>,
-  'getXid': ActorMethod<[Principal], [] | [Principal]>,
-  'initPreCreateDatabox': ActorMethod<[], Result_4>,
-  'initPreCreateProfile': ActorMethod<[], Result_4>,
+  'initPreCreateDatabox': ActorMethod<[], Result_3>,
+  'initPreCreateProfile': ActorMethod<[], Result_3>,
   'installCycleWasm': ActorMethod<[Uint8Array], Result>,
-  'preCreateDataBox': ActorMethod<[], Result_4>,
+  'isNotFirstDataBox': ActorMethod<[], boolean>,
+  'preCreateDataBox': ActorMethod<[], Result_3>,
   'preCreateDataBoxOne': ActorMethod<[], Result>,
-  'preCreateProfile': ActorMethod<[], Result_4>,
-  'preCreateProfileOne': ActorMethod<[], Result_4>,
+  'preCreateProfile': ActorMethod<[], Result_3>,
+  'preCreateProfileOne': ActorMethod<[], Result_3>,
   'recoverOG': ActorMethod<[Principal], undefined>,
+  'refreshBalance': ActorMethod<[Principal], undefined>,
   'removeShareBox': ActorMethod<[Principal, Principal], Result>,
   'removeSharedBox': ActorMethod<[Principal, Principal], Result>,
+  'selfburn': ActorMethod<[bigint], RustResult>,
   'setName': ActorMethod<[string], Result>,
-  'slowCreateDataBoxOne': ActorMethod<[CreateBoxArgs], Result_3>,
   'startBox': ActorMethod<[BoxInfo__1], undefined>,
   'stopBox': ActorMethod<[BoxInfo__1], undefined>,
   'topUpBox': ActorMethod<[TopUpArgs], Result>,
   'transferDataboxOwner': ActorMethod<[Principal, Principal], Result>,
   'transferOutICP': ActorMethod<[AccountIdentifier, bigint], Result_2>,
+  'transferV1UserID': ActorMethod<[string, Principal], Result>,
   'updateBoxInfo': ActorMethod<[BoxInfo__1], Result>,
   'updateDataBoxVersion': ActorMethod<[bigint], boolean>,
   'updateProfileVersion': ActorMethod<[bigint], boolean>,
   'updateWasm': ActorMethod<[UpdateWasmArgs], Result_1>,
-  'updateWasmOnce': ActorMethod<[Uint8Array], Result_1>,
-  'updateWasmTwice': ActorMethod<[Uint8Array], Result_1>,
   'upgradeBox': ActorMethod<[UpgradeBoxArgs], Result>,
-  'upgradeBoxOnce': ActorMethod<[UpgradeBoxArgs], Result>,
-  'upgradeBoxTwice': ActorMethod<[UpgradeBoxArgs], Result>,
   'wallet_receive': ActorMethod<[], undefined>,
   'xdrUpdate': ActorMethod<[], boolean>,
 }
@@ -169,14 +178,16 @@ export type Result_1 = { 'ok': string } |
   { 'err': string };
 export type Result_2 = { 'ok': BlockIndex__1 } |
   { 'err': TransferError };
-export type Result_3 = { 'ok': Principal } |
+export type Result_3 = { 'ok': Array<Principal> } |
   { 'err': Error };
-export type Result_4 = { 'ok': Array<Principal> } |
+export type Result_4 = { 'ok': BoxState } |
   { 'err': Error };
-export type Result_5 = { 'ok': BoxState } |
+export type Result_5 = { 'ok': string } |
   { 'err': Error };
-export type Result_6 = { 'ok': string } |
+export type Result_6 = { 'ok': Principal } |
   { 'err': Error };
+export type RustResult = { 'Ok': bigint } |
+  { 'Err': BurnError };
 export type Set = { 'branch': Branch } |
   { 'leaf': Leaf } |
   { 'empty': null };

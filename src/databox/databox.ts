@@ -15,7 +15,6 @@ import {Principal} from "@dfinity/principal";
 import {changePlainFilePermissionArg, shareFileArg} from "../types";
 import {AESEncryptApi, EncryptApi, RSAEncryptApi} from "../utils";
 import {MetaBox} from "../metabox";
-import {BoxInfo} from "../metabox/did/metabox_type";
 
 
 const chunkSize = 1992288
@@ -180,7 +179,7 @@ export class DataBox {
     }
   }
 
-  private async getFile(decodeArr: any, length: number): Promise<Uint8Array> {
+  static async getFile(decodeArr: any, length: number): Promise<Uint8Array> {
     const File = new Uint8Array(length)
     for (let i = 0; i < decodeArr.length; i++) {
       let slice = decodeArr[i]
@@ -226,7 +225,7 @@ export class DataBox {
           dataArr.push(e.ok)
           fileSize += e.ok.length
         })
-        const metadata = await this.getFile(dataArr, fileSize)
+        const metadata = await DataBox.getFile(dataArr, fileSize)
         return new Blob([metadata.buffer], {
           type: fileType,
         })
@@ -250,7 +249,7 @@ export class DataBox {
             fileSize += value.length
           })
         })
-        const metadata = await this.getFile(dataArr, fileSize)
+        const metadata = await DataBox.getFile(dataArr, fileSize)
         const privateKey = await RSAEncryptApi.importPrivateKey(privatekey);
         const preFileAesKey = await RSAEncryptApi.decryptMessage(
           privateKey,
@@ -374,25 +373,6 @@ export class DataBox {
     } catch (e) {
       throw e
     }
-  }
-
-  public async upgrade(BoxInfo: BoxInfo): Promise<boolean> {
-    return new Promise<boolean>(async (resolve, reject) => {
-      try {
-        const MBapi = new MetaBox(this.agent)
-        const version = Number(await this.getVersion())
-        if (version < 5) {
-          await MBapi.upgradeBoxOnce({info: BoxInfo})
-          await MBapi.upgradeBoxTwice({info: BoxInfo})
-        } else if (version < 7) {
-          await MBapi.upgradeBoxTwice({info: BoxInfo})
-        }
-        await MBapi.upgradeBox({info: BoxInfo})
-        return resolve(true)
-      } catch (e) {
-        return reject(e)
-      }
-    })
   }
 
   public async is_enough_to_upload(total_size: number): Promise<boolean> {

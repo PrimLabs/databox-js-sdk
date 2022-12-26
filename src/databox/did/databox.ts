@@ -171,6 +171,7 @@ export const idlFactory = ({IDL}) => {
     ),
     'avlSM': IDL.Func([], [Result_11], ['query']),
     'canisterState': IDL.Func([], [Result_10], ['query']),
+    'clearBuffer': IDL.Func([], [], []),
     'clearall': IDL.Func([], [Result_1], []),
     'curControl': IDL.Func(
       [],

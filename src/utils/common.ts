@@ -1,4 +1,8 @@
 import {Buffer} from "buffer";
+import {toHexString} from "@dfinity/candid";
+import {getCrc32} from "@dfinity/principal/lib/esm/utils/getCrc";
+import * as SHA1 from "@dfinity/principal/lib/esm/utils/sha224";
+
 
 export const ArrayToHexString = (byteArray: number[]) => {
   return Array.from(byteArray, function (byte) {
@@ -6,24 +10,35 @@ export const ArrayToHexString = (byteArray: number[]) => {
   }).join("");
 };
 
+
+
 export const getUint8ArrayFromHex = (str) => {
   return Uint8Array.from(Buffer.from(str, "hex"));
 };
 
-export const retry = async <T>(promise_arr: (() => Promise<T>)[], maxRetries: number, success_arr: T[] = new Array(promise_arr.length).fill(undefined)): Promise<T[]> => {
-  const all_promise: Promise<T>[] = []
-  const new_arr: (() => Promise<T>)[] = []
-  for (let i = 0; i < promise_arr.length; i++) {
-    all_promise.push(promise_arr[i]())
-  }
-  const res = await Promise.allSettled(all_promise)
-  for (let i = 0; i < res.length; i++) {
-    const item = res[i]
-    if (item.status === "fulfilled") success_arr[i] = item.value
-    else new_arr.push(promise_arr[i])
-  }
-  if (success_arr.every(e => !!e)) return success_arr
-  if (maxRetries === 0) throw new Error("执行错误")
-  maxRetries--;
-  return await retry(new_arr, maxRetries, success_arr)
-}
+
+export const getToAccountIdentifier = (principal, s) => {
+  const padding = new Buffer("\x0Aaccount-id");
+  const array = new Uint8Array([
+    ...padding,
+    ...principal.toUint8Array(),
+    ...getPrincipalSubAccountArray(s),
+  ]);
+  const hash = SHA1.sha224(array);
+  const checksum = to32bits(getCrc32(hash));
+  const array2 = new Uint8Array([...checksum, ...hash]);
+  return toHexString(array2);
+};
+
+ const getPrincipalSubAccountArray = (principal) => {
+  const p = Array.from(principal.toUint8Array());
+  let tmp = Array(1).fill(p.length).concat(p);
+  while (tmp.length < 32) tmp.push(0);
+  return tmp;
+};
+
+const to32bits = (num) => {
+  let b = new ArrayBuffer(4);
+  new DataView(b).setUint32(0, num);
+  return Array.from(new Uint8Array(b));
+};

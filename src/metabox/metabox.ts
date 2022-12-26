@@ -6,14 +6,16 @@ import {
   BoxInfo__1,
   BoxMetadata,
   CreateBoxArgs,
-  DelBoxArgs, Result, Result_3,
+  DelBoxArgs, Result, Result_5,
   Result_6,
   TopUpArgs, UpgradeBoxArgs
 } from "./did/metabox_type";
-import {authApi} from "../auth";
+import {getToAccountIdentifier} from "../utils";
+
+export const mb_cid = "zbzr7-xyaaa-aaaan-qadeq-cai"
 
 export class MetaBox {
-  private readonly metaBoxCai = "zbzr7-xyaaa-aaaan-qadeq-cai"
+  private readonly metaBoxCai = mb_cid
   private readonly agent: HttpAgent
   private readonly MetaBoxActor: ActorSubclass<Record<string, ActorMethod<unknown[], unknown>>>
 
@@ -22,19 +24,50 @@ export class MetaBox {
     this.MetaBoxActor = Actor.createActor(idlFactory, {agent, canisterId: this.metaBoxCai})
   }
 
+  async get_accountID() {
+    const principal = await this.agent.getPrincipal()
+    return getToAccountIdentifier(Principal.from(this.metaBoxCai), principal)
+  }
 
-  public async createDataBox(props: BoxMetadata): Promise<Result_3> {
-    try {
-      const principal = await this.agent.getPrincipal()
-      const arg: CreateBoxArgs = {
-        metadata: props
+  async createBoxFree(
+    arg: BoxMetadata
+  ) {
+    return new Promise<Principal>(async (resolve, reject) => {
+      try {
+        const Actor = this.MetaBoxActor;
+        const Arg: CreateBoxArgs = {
+          'metadata': arg
+        }
+        const res = await Actor.createDataBoxFree(Arg) as Result_6 as any
+        if (Object.keys(res)[0] === "ok") return resolve(res.ok)
+        else reject(`${Object.keys(res.err)[0]}`);
+      } catch (e) {
+        reject(e);
       }
-      const u8 = authApi.get_auth_token(principal)
-      const res = await this.MetaBoxActor.createDataBox(arg, u8) as Result_3;
-      if (Object.keys(res)[0] === "err") {
-        //@ts-ignore
-        throw new Error(`${Object.keys(res.err)[0]}`)
-      } else return res
+    });
+  }
+
+  async createBoxFee(arg: BoxMetadata, is_need_refresh: boolean) {
+    return new Promise<Principal>(async (resolve, reject) => {
+      try {
+        const Actor = this.MetaBoxActor;
+        const Arg: CreateBoxArgs = {
+          'metadata': arg
+        }
+        const res = await Actor.createDataBoxFee(Arg, is_need_refresh) as Result_6 as any
+        if (Object.keys(res)[0] === "ok") return resolve(res.ok)
+        else reject(`${Object.keys(res.err)[0]}`);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  async getICP() {
+    try {
+      const Actor = this.MetaBoxActor;
+      const res = await Actor.getIcp() as bigint
+      return Number(res)
     } catch (e) {
       throw e
     }
@@ -48,9 +81,9 @@ export class MetaBox {
     }
   }
 
-  public async deleteBox(delBoxArgs: DelBoxArgs): Promise<Result_6> {
+  public async deleteBox(delBoxArgs: DelBoxArgs): Promise<Result_5> {
     try {
-      return await this.MetaBoxActor.deleteBox(delBoxArgs) as Result_6
+      return await this.MetaBoxActor.deleteBox(delBoxArgs) as Result_5
     } catch (e) {
       throw e
     }
@@ -83,22 +116,6 @@ export class MetaBox {
   async upgradeBox(UpgradeBoxArgs: UpgradeBoxArgs): Promise<Result> {
     try {
       return await this.MetaBoxActor.upgradeBox(UpgradeBoxArgs) as Result
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async upgradeBoxOnce(UpgradeBoxArgs: UpgradeBoxArgs): Promise<Result> {
-    try {
-      return await this.MetaBoxActor.upgradeBoxOnce(UpgradeBoxArgs) as Result
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async upgradeBoxTwice(UpgradeBoxArgs: UpgradeBoxArgs): Promise<Result> {
-    try {
-      return await this.MetaBoxActor.upgradeBoxTwice(UpgradeBoxArgs) as Result
     } catch (e) {
       throw e
     }

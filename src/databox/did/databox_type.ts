@@ -31,6 +31,7 @@ export interface DataBox {
   'addPrivatePlainShare': ActorMethod<[string, Principal], Result_1>,
   'avlSM': ActorMethod<[], Result_11>,
   'canisterState': ActorMethod<[], Result_10>,
+  'clearBuffer': ActorMethod<[], undefined>,
   'clearall': ActorMethod<[], Result_1>,
   'curControl': ActorMethod<[], [Principal, Array<Principal>]>,
   'cycleBalance': ActorMethod<[], Result_7>,
