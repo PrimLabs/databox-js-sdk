@@ -9,8 +9,8 @@ import {
   Result_7,
   Result_9
 } from "./did/databox_type";
-import random from "string-random"
 import {nanoid} from "nanoid";
+import random from "string-random"
 import {Principal} from "@dfinity/principal";
 import {changePlainFilePermissionArg, shareFileArg} from "../types";
 import {AESEncryptApi, EncryptApi, RSAEncryptApi} from "../utils";
@@ -45,13 +45,15 @@ export class DataBox {
     }
   }
 
-  public async put_plain_files(files: File[], is_private: boolean): Promise<string[]> {
+  public async put_plain_files(files: File[], is_private: boolean, key_arr?: string[]): Promise<string[]> {
     try {
+      if (key_arr && key_arr.length !== files.length) throw new Error("文件数量与key数量不匹配")
       const Actor = this.DataBoxActor
-      const keyArr: Array<string> = []
       const allPromise: Array<Promise<any>> = []
-      for (const file of files) {
-        const key = nanoid()
+      const keyArr: string[] = []
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const key = key_arr ? key_arr[i] : nanoid()
         keyArr.push(key)
         const total_size = file.size
         const total_index = Math.ceil(total_size / chunkSize)
@@ -136,13 +138,15 @@ export class DataBox {
     }
   }
 
-  public async put_encrypt_files(files: File[], is_private: boolean, publicKey: string): Promise<string[]> {
+  public async put_encrypt_files(files: File[], is_private: boolean, publicKey: string, key_arr?: string[]): Promise<string[]> {
     try {
+      if (key_arr && key_arr.length !== files.length) throw new Error("文件数量与key数量不匹配")
       const Actor = this.DataBoxActor
       const keyArr: Array<string> = []
       const allPromise: Array<any> = []
-      for (const file of files) {
-        const key = nanoid()
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const key = key_arr ? key_arr[i] : nanoid()
         keyArr.push(key)
         const total_size = file.size
         const allData = await this.FileRead(file)

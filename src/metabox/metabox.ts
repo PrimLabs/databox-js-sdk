@@ -6,8 +6,7 @@ import {
   BoxInfo__1,
   BoxMetadata,
   CreateBoxArgs,
-  DelBoxArgs, Result, Result_5,
-  Result_6,
+  DelBoxArgs, Result, Result_4, Result_5,
   TopUpArgs, UpgradeBoxArgs
 } from "./did/metabox_type";
 import {getToAccountIdentifier} from "../utils";
@@ -24,6 +23,15 @@ export class MetaBox {
     this.MetaBoxActor = Actor.createActor(idlFactory, {agent, canisterId: this.metaBoxCai})
   }
 
+  async isNotFirstDataBox() {
+    try {
+      const Actor = this.MetaBoxActor;
+      return await Actor.isNotFirstDataBox() as boolean
+    } catch (e) {
+      throw e
+    }
+  }
+
   async get_accountID() {
     const principal = await this.agent.getPrincipal()
     return getToAccountIdentifier(Principal.from(this.metaBoxCai), principal)
@@ -38,7 +46,7 @@ export class MetaBox {
         const Arg: CreateBoxArgs = {
           'metadata': arg
         }
-        const res = await Actor.createDataBoxFree(Arg) as Result_6 as any
+        const res = await Actor.createDataBoxFree(Arg) as Result_5 as any
         if (Object.keys(res)[0] === "ok") return resolve(res.ok)
         else reject(`${Object.keys(res.err)[0]}`);
       } catch (e) {
@@ -54,7 +62,7 @@ export class MetaBox {
         const Arg: CreateBoxArgs = {
           'metadata': arg
         }
-        const res = await Actor.createDataBoxFee(Arg, is_need_refresh) as Result_6 as any
+        const res = await Actor.createDataBoxFee(Arg, is_need_refresh) as Result_5 as any
         if (Object.keys(res)[0] === "ok") return resolve(res.ok)
         else reject(`${Object.keys(res.err)[0]}`);
       } catch (e) {
@@ -81,9 +89,9 @@ export class MetaBox {
     }
   }
 
-  public async deleteBox(delBoxArgs: DelBoxArgs): Promise<Result_5> {
+  public async deleteBox(delBoxArgs: DelBoxArgs): Promise<Result_4> {
     try {
-      return await this.MetaBoxActor.deleteBox(delBoxArgs) as Result_5
+      return await this.MetaBoxActor.deleteBox(delBoxArgs) as Result_4
     } catch (e) {
       throw e
     }
@@ -135,6 +143,22 @@ export class MetaBox {
     } catch (e) {
       throw e
     }
+  }
+
+  createDataBoxControl(arg: BoxMetadata, is_need_refresh: boolean, controller?: Principal) {
+    return new Promise<Principal>(async (resolve, reject) => {
+      try {
+        const Actor = this.MetaBoxActor;
+        const arg_0: CreateBoxArgs = {
+          metadata: arg
+        }
+        const res = await Actor.createDataBoxControl(arg_0, is_need_refresh, controller ? [controller] : []) as Result_5 as any
+        if (Object.keys(res)[0] === "ok") return resolve(res.ok)
+        else reject(`${Object.keys(res.err)[0]}`);
+      } catch (e) {
+        throw e
+      }
+    })
   }
 
 }

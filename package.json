@@ -1,12 +1,12 @@
 {
   "name": "js-databox",
-  "version": "0.0.10",
+  "version": "0.0.15",
   "description": "",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./cjs/index.js",
+  "module": "./esm/index.js",
   "scripts": {
     "build:types": "tsc",
-    "build": "tsc -b && tsc -p tsconfig.json",
+    "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-esm.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -31,12 +31,12 @@
   },
   "dependencies": {
     "@dfinity/agent": "^0.12.0",
-    "@dfinity/candid": "^0.11.3",
-    "@dfinity/principal": "^0.11.0",
+    "@dfinity/candid": "^0.12.0",
+    "@dfinity/principal": "^0.12.0",
     "@types/crypto-js": "^4.1.1",
     "buffer": "^6.0.3",
     "crypto-js": "^4.0.0",
-    "nanoid": "^4.0.0",
+    "nanoid": "^3.0.0",
     "string-random": "^0.1.3"
   }
 }

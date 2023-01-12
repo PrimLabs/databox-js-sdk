@@ -1,15 +1,13 @@
 import {Buffer} from "buffer";
 import {toHexString} from "@dfinity/candid";
-import {getCrc32} from "@dfinity/principal/lib/esm/utils/getCrc";
-import * as SHA1 from "@dfinity/principal/lib/esm/utils/sha224";
-
+import {getCrc32} from "@dfinity/principal/lib/cjs/utils/getCrc";
+import * as SHA1 from "@dfinity/principal/lib/cjs/utils/sha224";
 
 export const ArrayToHexString = (byteArray: number[]) => {
   return Array.from(byteArray, function (byte) {
     return ("0" + (byte & 0xff).toString(16)).slice(-2);
   }).join("");
 };
-
 
 
 export const getUint8ArrayFromHex = (str) => {
@@ -30,7 +28,7 @@ export const getToAccountIdentifier = (principal, s) => {
   return toHexString(array2);
 };
 
- const getPrincipalSubAccountArray = (principal) => {
+const getPrincipalSubAccountArray = (principal) => {
   const p = Array.from(principal.toUint8Array());
   let tmp = Array(1).fill(p.length).concat(p);
   while (tmp.length < 32) tmp.push(0);

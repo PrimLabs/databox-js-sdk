@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
+    "target": "es2015",
+    "module": "es2020",
     "declaration": true,
     "moduleResolution": "node",
     // 根据ts文件自动生成.d.ts声明文件和js文件
     "emitDeclarationOnly": false,
     // 只输出.d.ts声明文件，不生成js文件
-    "outDir": "./dist/cjs",
+    "outDir": "./dist/esm",
     // 输出目录
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,5 +15,6 @@
     "noImplicitAny": false,
     "noImplicitThis": false,
     "skipLibCheck": true
-  }
+  },
+  "extends": "./tsconfig.json"
 }
