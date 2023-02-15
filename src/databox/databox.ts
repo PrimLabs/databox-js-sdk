@@ -1,11 +1,13 @@
 import {idlFactory} from "./did/databox"
 import {Actor, ActorMethod, ActorSubclass, HttpAgent} from "@dfinity/agent";
 import {
+  FileExt,
+  FileLocation,
   FilePut,
   Result_1,
   Result_10,
   Result_2,
-  Result_3,
+  Result_3, Result_5,
   Result_7,
   Result_9
 } from "./did/databox_type";
@@ -29,7 +31,7 @@ export class DataBox {
     this.DataBoxActor = Actor.createActor(idlFactory, {agent, canisterId})
   }
 
-  public async canisterState(): Promise<Result_10> {
+  public async boxState(): Promise<Result_10> {
     try {
       return await this.DataBoxActor.canisterState() as Result_10
     } catch (e) {
@@ -57,7 +59,7 @@ export class DataBox {
         keyArr.push(key)
         const total_size = file.size
         const total_index = Math.ceil(total_size / chunkSize)
-        const allData = await this.FileRead(file)
+        const allData = await DataBox.FileRead(file)
         for (let i = 0; i < allData.length; i++) {
           const arg: FilePut = {
             PlainFilePut: {
@@ -84,19 +86,13 @@ export class DataBox {
     }
   }
 
-  public async FileRead(file: File | Blob): Promise<Uint8Array[]> {
+  static async FileRead(file: File | Blob): Promise<Uint8Array[]> {
     try {
       return new Promise((resolve, reject) => {
         let start = 0;
         let currentChunk = 0;
         const total_index = Math.ceil(file.size / chunkSize)
         const allData: Array<Uint8Array> = []
-        let blobSlice = //@ts-ignore
-          File.prototype.slice ||
-          //@ts-ignore
-          File.prototype.mozSlice ||
-          //@ts-ignore
-          File.prototype.webkitSlice;
         let reader = new FileReader();
         reader.onload = async function (e: any) {
           allData.push(new Uint8Array(e.target.result))
@@ -109,7 +105,7 @@ export class DataBox {
         const loadChunk = () => {
           const end = start + chunkSize;
           currentChunk++;
-          reader.readAsArrayBuffer(blobSlice.call(file, start, end));
+          reader.readAsArrayBuffer(file.slice(start, end));
           start = end;
         };
         loadChunk();
@@ -119,7 +115,7 @@ export class DataBox {
     }
   }
 
-  public async encryptFileData(data: Uint8Array, publicKey: string) {
+  static async encryptFileData(data: Uint8Array, publicKey: string) {
     try {
       const AESKEY = await EncryptApi.aesKeyGen();
       const AESIv = random(128);
@@ -149,14 +145,14 @@ export class DataBox {
         const key = key_arr ? key_arr[i] : nanoid()
         keyArr.push(key)
         const total_size = file.size
-        const allData = await this.FileRead(file)
+        const allData = await DataBox.FileRead(file)
         const data = new Uint8Array(total_size)
         for (let i = 0; i < allData.length; i++) {
           data.set(allData[i], i * chunkSize)
         }
-        const {encData, encryptedAesKey} = await this.encryptFileData(data, publicKey)
+        const {encData, encryptedAesKey} = await DataBox.encryptFileData(data, publicKey)
         const NewBlob = new Blob([encData])
-        const encryptedData = await this.FileRead(NewBlob)
+        const encryptedData = await DataBox.FileRead(NewBlob)
         for (let i = 0; i < encryptedData.length; i++) {
           const arg: FilePut = {
             EncryptFilePut: {
@@ -272,7 +268,7 @@ export class DataBox {
     }
   }
 
-  public async delete_ic_plain_file(file_key: string): Promise<Result_1> {
+  public async delete_box_plain_file(file_key: string): Promise<Result_1> {
     try {
       return await this.DataBoxActor.deleteFileFromKey(file_key, {'Plain': null}) as Result_1
     } catch (e) {
@@ -280,7 +276,7 @@ export class DataBox {
     }
   }
 
-  public async delete_ic_encrypted_file(file_key: string): Promise<Result_1> {
+  public async delete_box_encrypted_file(file_key: string): Promise<Result_1> {
     try {
       return await this.DataBoxActor.deleteFileFromKey(file_key, {'EnCrypt': null}) as Result_1
     } catch (e) {
@@ -392,6 +388,41 @@ export class DataBox {
         } else return reject(String(Object.keys(res.err)[0]))
       } catch (e) {
         return reject(e)
+      }
+    })
+  }
+
+  /**
+   *
+   * @param {FileLocation} fileLocation 文件位置
+   * @return {Result_7} 数据个数
+   */
+  public async getFileNums(fileLocation: FileLocation): Promise<Result_7> {
+    try {
+      return await this.DataBoxActor.getFileNums(fileLocation) as Result_7
+    } catch (e) {
+      throw e
+    }
+  }
+
+  /**
+   * 分页get数据
+   *
+   * @param {FileLocation} fileLocation 文件位置
+   * @param {number} onePageFileNums 每一页的数据大小 不能超过5000
+   * @param {number} pageIndex 取哪一页
+   * @example
+   * getPageFiles({Plain:null},2,0) 取明文数据，每一页有两个数据，取第一页
+   */
+  public getPageFiles(fileLocation: FileLocation, onePageFileNums: number, pageIndex: number) {
+    return new Promise<FileExt[]>(async (resolve, reject) => {
+      try {
+        if (onePageFileNums > 5000) return reject("A page of data cannot exceed 5000")
+        const res = await this.DataBoxActor.getPageFiles(fileLocation, BigInt(onePageFileNums), BigInt(pageIndex)) as Result_5 as any
+        if (Object.keys(res)[0] === "ok") return resolve(res.ok)
+        else return reject(Object.keys(res.err)[0])
+      } catch (e) {
+        throw e
       }
     })
   }
